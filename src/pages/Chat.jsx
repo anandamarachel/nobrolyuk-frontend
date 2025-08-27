@@ -157,23 +157,28 @@ export default function ChatPage() {
 
   // Send message via WebSocket
   const sendMessage = async (e) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
-    if (!selectedChat) return;
-    if (!ws || !wsReady.current) {
-      alert("Tidak terhubung ke obrolan. Coba refresh.");
-      return;
-    }
+  e.preventDefault();
+  console.log("📩 sendMessage called"); // 🔥 ADD THIS
+  if (!newMessage.trim()) return;
+  if (!selectedChat) return;
+  if (!ws || !wsReady.current) {
+    alert("Tidak terhubung ke obrolan. Coba refresh.");
+    return;
+  }
 
-    const msgData = {
-      receiver_id: selectedChat,
-      content: newMessage,
-      type: "text",
-    };
+  const msgData = {
+    receiver_id: selectedChat,
+    content: newMessage,
+    type: "text",
+  };
 
-    try {
-      ws.send(JSON.stringify(msgData));
-      setMessages((prev) => [
+  try {
+    ws.send(JSON.stringify(msgData));
+    console.log("✅ Sent via WS", msgData); // 🔥 ADD THIS
+
+    setMessages((prev) => {
+      console.log("🔄 Updating messages", [...prev, msgData]); // 🔥 ADD THIS
+      return [
         ...prev,
         {
           id: Date.now(),
@@ -183,13 +188,14 @@ export default function ChatPage() {
           type: "text",
           created_at: new Date().toISOString(),
         },
-      ]);
-      setNewMessage("");
-    } catch (err) {
-      console.error("Failed to send message", err);
-      alert("Gagal mengirim pesan");
-    }
-  };
+      ];
+    });
+    setNewMessage("");
+  } catch (err) {
+    console.error("Failed to send message", err);
+    alert("Gagal mengirim pesan");
+  }
+};
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -327,7 +333,7 @@ export default function ChatPage() {
               />
               <button
                 type="submit"
-                disabled={!newMessage.trim() || !ws || !wsReady.current}
+                disabled={!newMessage.trim()}
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white px-6 py-2 rounded-full transition-colors"
               >
                 Kirim

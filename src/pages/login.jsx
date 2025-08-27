@@ -35,7 +35,7 @@ function Login() {
     }
 
     console.log("✅ Login successful:", data);
-    navigate("/chat");
+    setTimeout(() => navigate("/chat"), 100);
   } catch (err) {
     console.error(err);
     setError(err.message);
