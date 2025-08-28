@@ -66,30 +66,42 @@ export default function ChatPage() {
       wsReady.current = true; // ✅ Mark as ready
     };
 
-    websocket.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-        if (
-  selectedChat &&
-  (msg.sender_id === selectedChat || msg.receiver_id === selectedChat)
-) {
-  setMessages((prev) => [...prev, msg]);
-}
+   websocket.onmessage = (event) => {
+  try {
+    const msg = JSON.parse(event.data);
 
-        setConversations((prev) =>
-          prev.map((c) =>
-            c.user.id === msg.sender_id
-              ? {
-                  ...c,
-                  last_message: { content: msg.content, sender_id: msg.sender_id },
-                }
-              : c
-          )
-        );
-      } catch (err) {
-        console.error("Failed to parse WebSocket message", err);
-      }
-    };
+    if (msg.sender_id === profile.id) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.content === msg.content && m.created_at === msg.created_at
+            ? { ...msg, status: "sent" }
+            : m
+        )
+      );
+      return;
+    }
+
+    if (
+      selectedChat &&
+      (msg.sender_id === selectedChat || msg.receiver_id === selectedChat)
+    ) {
+      setMessages((prev) => [...prev, msg]);
+    }
+
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.user.id === msg.sender_id
+          ? {
+              ...c,
+              last_message: { content: msg.content, sender_id: msg.sender_id },
+            }
+          : c
+      )
+    );
+  } catch (err) {
+    console.error("Failed to parse WebSocket message", err);
+  }
+};
 
     websocket.onerror = (err) => {
       console.error("WebSocket error:", err);
@@ -158,7 +170,6 @@ export default function ChatPage() {
   // Send message via WebSocket
   const sendMessage = async (e) => {
   e.preventDefault();
-  console.log("📩 sendMessage called"); // 🔥 ADD THIS
   if (!newMessage.trim()) return;
   if (!selectedChat) return;
   if (!ws || !wsReady.current) {
@@ -166,34 +177,54 @@ export default function ChatPage() {
     return;
   }
 
+  const tempId = `temp_${Date.now()}`;
+  const now = new Date().toISOString();
+
   const msgData = {
     receiver_id: selectedChat,
     content: newMessage,
     type: "text",
   };
 
+  // Add optimistic message with temp ID
+  setMessages((prev) => [
+    ...prev,
+    {
+      id: tempId,
+      sender_id: profile.id,
+      receiver_id: selectedChat,
+      content: newMessage,
+      type: "text",
+      created_at: now,
+      status: "sending",
+    },
+  ]);
+
+  // Update conversations
+  setConversations((prev) =>
+    prev.map((c) =>
+      c.user.id === selectedChat
+        ? {
+            ...c,
+            last_message: { content: newMessage, sender_id: profile.id },
+          }
+        : c
+    )
+  );
+
   try {
     ws.send(JSON.stringify(msgData));
-    console.log("✅ Sent via WS", msgData); // 🔥 ADD THIS
-
-    setMessages((prev) => {
-      console.log("🔄 Updating messages", [...prev, msgData]); // 🔥 ADD THIS
-      return [
-        ...prev,
-        {
-          id: Date.now(),
-          sender_id: profile.id,
-          receiver_id: selectedChat,
-          content: newMessage,
-          type: "text",
-          created_at: new Date().toISOString(),
-        },
-      ];
-    });
     setNewMessage("");
   } catch (err) {
     console.error("Failed to send message", err);
     alert("Gagal mengirim pesan");
+
+    // Optionally: mark as failed
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === tempId ? { ...m, status: "failed" } : m
+      )
+    );
   }
 };
 
