@@ -1,15 +1,15 @@
 // src/utils/apiFetch.js
 
-const BASE_URL = "http://localhost:8080";
-
 export default async function apiFetch(path, options = {}) {
+  const url = path; // ✅ Use the full path as-is
+
   try {
-    const res = await fetch(BASE_URL + path, {
+    const res = await fetch(url, {
       ...options,
-      credentials: "include", 
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        ...(options.headers || {}),
+        ...options.headers,
       },
     });
 
@@ -23,11 +23,13 @@ export default async function apiFetch(path, options = {}) {
       try {
         const data = await res.json();
         message = data.error || data.message || message;
-      } catch {}
+      } catch (e) {
+        // Ignore
+      }
       throw new Error(message);
     }
 
-    return res.json();
+    return await res.json();
   } catch (err) {
     console.error("apiFetch error:", err);
     throw err;
