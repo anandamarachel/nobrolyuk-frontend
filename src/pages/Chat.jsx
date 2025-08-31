@@ -57,7 +57,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (!profile) return;
 
-    const wsUrl = "ws://localhost:8080/ws";
+    const wsUrl = `ws${window.location.protocol === "https:" ? "s" : ""}://${window.location.host}/ws`;
     const websocket = new WebSocket(wsUrl);
 
     websocket.onopen = () => {
