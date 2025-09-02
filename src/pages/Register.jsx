@@ -23,7 +23,7 @@ function Register() {
   }
 
   try {
-    const res = await fetch("http://localhost:8080/api/v1/auth/register", {
+    const res = await fetch("/api/v1/auth/register", {
       method: "POST",
       credentials: "include", 
       headers: {
