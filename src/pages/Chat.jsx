@@ -6,11 +6,11 @@ export default function ChatPage() {
   const [profile, setProfile] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
-  const [selectedUserInfo, setSelectedUserInfo] = useState(null); 
+  const [selectedUserInfo, setSelectedUserInfo] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [ws, setWs] = useState(null);
-  const wsReady = useRef(false); 
+  const wsReady = useRef(false);
   const [loading, setLoading] = useState(false);
 
   const messagesEndRef = useRef(null);
@@ -32,6 +32,7 @@ export default function ChatPage() {
       } catch (err) {
         console.error("Failed to load profile", err);
         navigate("/login");
+        a;
       }
     };
     fetchProfile();
@@ -57,7 +58,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (!profile) return;
 
-    const wsUrl = "ws://localhost:8080/ws";
+    const wsUrl = `ws://localhost:8080/ws`;
     const websocket = new WebSocket(wsUrl);
 
     websocket.onopen = () => {
@@ -70,18 +71,21 @@ export default function ChatPage() {
       try {
         const msg = JSON.parse(event.data);
         if (
-  selectedChat &&
-  (msg.sender_id === selectedChat || msg.receiver_id === selectedChat)
-) {
-  setMessages((prev) => [...prev, msg]);
-}
+          selectedChat &&
+          (msg.sender_id === selectedChat || msg.receiver_id === selectedChat)
+        ) {
+          setMessages((prev) => [...prev, msg]);
+        }
 
         setConversations((prev) =>
           prev.map((c) =>
             c.user.id === msg.sender_id
               ? {
                   ...c,
-                  last_message: { content: msg.content, sender_id: msg.sender_id },
+                  last_message: {
+                    content: msg.content,
+                    sender_id: msg.sender_id,
+                  },
                 }
               : c
           )
@@ -136,7 +140,7 @@ export default function ChatPage() {
       );
 
       // Get user info for header
-      const userInConvo = conversations.find(c => c.user.id === userId);
+      const userInConvo = conversations.find((c) => c.user.id === userId);
       if (userInConvo) {
         setSelectedUserInfo(userInConvo.user);
       } else {
@@ -154,54 +158,37 @@ export default function ChatPage() {
       setLoading(false);
     }
   };
-
   // Send message via WebSocket
   const sendMessage = async (e) => {
-  e.preventDefault();
-  console.log("📩 sendMessage called"); // 🔥 ADD THIS
-  if (!newMessage.trim()) return;
-  if (!selectedChat) return;
-  if (!ws || !wsReady.current) {
-    alert("Tidak terhubung ke obrolan. Coba refresh.");
-    return;
-  }
+    e.preventDefault();
+    console.log("📩 sendMessage called");
+    if (!newMessage.trim()) return;
+    if (!selectedChat) return;
+    if (!ws || !wsReady.current) {
+      alert("Tidak terhubung ke obrolan. Coba refresh.");
+      return;
+    }
 
-  const msgData = {
-    receiver_id: selectedChat,
-    content: newMessage,
-    type: "text",
+    const msgData = {
+      receiver_id: selectedChat,
+      content: newMessage,
+      type: "text",
+    };
+
+    try {
+      ws.send(JSON.stringify(msgData));
+      console.log("✅ Sent via WS", msgData);
+      setNewMessage("");
+    } catch (err) {
+      console.error("Failed to send message", err);
+      alert("Gagal mengirim pesan");
+    }
   };
-
-  try {
-    ws.send(JSON.stringify(msgData));
-    console.log("✅ Sent via WS", msgData); // 🔥 ADD THIS
-
-    setMessages((prev) => {
-      console.log("🔄 Updating messages", [...prev, msgData]); // 🔥 ADD THIS
-      return [
-        ...prev,
-        {
-          id: Date.now(),
-          sender_id: profile.id,
-          receiver_id: selectedChat,
-          content: newMessage,
-          type: "text",
-          created_at: new Date().toISOString(),
-        },
-      ];
-    });
-    setNewMessage("");
-  } catch (err) {
-    console.error("Failed to send message", err);
-    alert("Gagal mengirim pesan");
-  }
-};
 
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
   return (
     <div className="flex h-screen bg-gray-50 font-outfit">
       {/* Sidebar */}
@@ -215,7 +202,9 @@ export default function ChatPage() {
           >
             {/* Profile Initial Circle */}
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
-              {profile?.username ? profile.username.charAt(0).toUpperCase() : "U"}
+              {profile?.username
+                ? profile.username.charAt(0).toUpperCase()
+                : "U"}
             </div>
 
             {/* Username */}
@@ -232,9 +221,15 @@ export default function ChatPage() {
             className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors"
             title="Cari pengguna"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-              <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 13a6 6 0 1 1 0-12 6 6 0 0 1 0 12z"/>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              fill="currentColor"
+              viewBox="0 0 16 16"
+            >
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+              <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 13a6 6 0 1 1 0-12 6 6 0 0 1 0 12z" />
             </svg>
           </Link>
         </div>
@@ -305,7 +300,11 @@ export default function ChatPage() {
                 messages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`flex ${msg.sender_id === profile?.id ? "justify-end" : "justify-start"}`}
+                    className={`flex ${
+                      msg.sender_id === profile?.id
+                        ? "justify-end"
+                        : "justify-start"
+                    }`}
                   >
                     <div
                       className={`max-w-xs px-4 py-2 rounded-lg text-sm ${
@@ -323,7 +322,10 @@ export default function ChatPage() {
             </div>
 
             {/* Input */}
-            <form onSubmit={sendMessage} className="p-4 border-t bg-white flex gap-2">
+            <form
+              onSubmit={sendMessage}
+              className="p-4 border-t bg-white flex gap-2"
+            >
               <input
                 type="text"
                 value={newMessage}

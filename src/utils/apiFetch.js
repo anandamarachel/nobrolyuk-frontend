@@ -1,25 +1,34 @@
-// src/utils/apiFetch.js
+// utils/apiFetch.js
 
 const BASE_URL = "http://localhost:8080";
+const apiFetch = async (path, options = {}) => {
+  const config = {
+    ...options,
+    credentials: "include", // penting biar cookie JWT ikut
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  };
 
-export default async function apiFetch(path, options = {}) {
+  console.log("apiFetch: request =>", BASE_URL + path);
+
   try {
-    const res = await fetch(BASE_URL + path, {
-      ...options,
-      credentials: "include", 
-      headers: {
-        "Content-Type": "application/json",
-        ...(options.headers || {}),
-      },
-    });
+    const res = await fetch(BASE_URL + path, config);
+
+    console.log("apiFetch: response status", res.status);
 
     if (res.status === 401) {
-      window.location.href = "/login";
+      console.log("Unauthorized → clear session");
+      localStorage.removeItem("user");
+      if (!window.location.pathname.includes("/login")) {
+        window.location.href = "/login";
+      }
       throw new Error("Unauthorized");
     }
 
     if (!res.ok) {
-      let message = "API request failed";
+      let message = `HTTP ${res.status}`;
       try {
         const data = await res.json();
         message = data.error || data.message || message;
@@ -27,9 +36,11 @@ export default async function apiFetch(path, options = {}) {
       throw new Error(message);
     }
 
-    return res.json();
+    return await res.json();
   } catch (err) {
     console.error("apiFetch error:", err);
     throw err;
   }
-}
+};
+
+export default apiFetch;

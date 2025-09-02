@@ -11,40 +11,38 @@ function Login() {
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setError("");
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
-  try {
-    const res = await fetch("http://localhost:8080/api/v1/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include", // ✅ keep cookies
-      body: JSON.stringify({ email, password }),
-    });
-
-    let data = {};
     try {
-      data = await res.json();
-    } catch (e) {
-      console.log("No JSON body, cookie should be set by backend.");
+      const res = await fetch("http://localhost:8080/api/v1/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || data.message || "Invalid credentials");
+      }
+
+      console.log("✅ Login successful:", data);
+
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+
+      navigate("/chat");
+    } catch (err) {
+      console.error("Login error:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-
-    if (!res.ok) {
-      throw new Error(data.message || "Invalid credentials");
-    }
-
-    console.log("✅ Login successful:", data);
-    setTimeout(() => navigate("/chat"), 100);
-  } catch (err) {
-    console.error(err);
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
@@ -65,10 +63,11 @@ function Login() {
           <h1
             className="text-3xl font-bold text-transparent bg-clip-text"
             style={{
-              backgroundImage: 'linear-gradient(90deg, #4FACFE 0%, #00F2FE 40%, #8B5CF6 100%)',
-              WebkitBackgroundClip: 'text',
-              backgroundSize: '200% auto',
-              animation: 'textShine 4s linear infinite',
+              backgroundImage:
+                "linear-gradient(90deg, #4FACFE 0%, #00F2FE 40%, #8B5CF6 100%)",
+              WebkitBackgroundClip: "text",
+              backgroundSize: "200% auto",
+              animation: "textShine 4s linear infinite",
             }}
           >
             Ngobrol.Yuk
@@ -87,7 +86,10 @@ function Login() {
         <form onSubmit={handleLogin} className="space-y-5">
           {/* Email Field */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Alamat Email
             </label>
             <input
@@ -103,7 +105,10 @@ function Login() {
 
           {/* Password Field */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Kata Sandi
             </label>
             <div className="relative">
@@ -122,14 +127,26 @@ function Login() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
               >
                 {showPassword ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M8 5.5a.5.5 0 0 1 .5-.5H10a.5.5 0 0 1 0 1H8.5a.5.5 0 0 1-.5-.5zM11 9a.5.5 0 0 1 .5-.5h.5a.5.5 0 0 1 0 1h-.5a.5.5 0 0 1-.5-.5zm-5 0a.5.5 0 0 1 .5-.5H8a.5.5 0 0 1 0 1h-.5a.5.5 0 0 1-.5-.5z"/>
-                    <path d="M14.5 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM13 7.5c.5 0 1 .5 1 1s-.5 1-1 1c-.5 0-1-.5-1-1s.5-1 1-1zM8 10a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm-1.5 2a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm-1.5-7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5.5 7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm1.5-7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    viewBox="0 0 16 16"
+                  >
+                    <path d="M8 5.5a.5.5 0 0 1 .5-.5H10a.5.5 0 0 1 0 1H8.5a.5.5 0 0 1-.5-.5zM11 9a.5.5 0 0 1 .5-.5h.5a.5.5 0 0 1 0 1h-.5a.5.5 0 0 1-.5-.5zm-5 0a.5.5 0 0 1 .5-.5H8a.5.5 0 0 1 0 1h-.5a.5.5 0 0 1-.5-.5z" />
+                    <path d="M14.5 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM13 7.5c.5 0 1 .5 1 1s-.5 1-1 1c-.5 0-1-.5-1-1s.5-1 1-1zM8 10a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm-1.5 2a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm-1.5-7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5.5 7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm1.5-7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" />
                   </svg>
                 ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.12 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
-                    <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    viewBox="0 0 16 16"
+                  >
+                    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.12 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z" />
+                    <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z" />
                   </svg>
                 )}
               </button>
@@ -149,7 +166,10 @@ function Login() {
         {/* Sign-up Link */}
         <p className="mt-6 text-center text-sm text-gray-600">
           Belum punya akun?{" "}
-          <a href="/signup" className="font-medium text-blue-600 hover:underline">
+          <a
+            href="/signup"
+            className="font-medium text-blue-600 hover:underline"
+          >
             Daftar sekarang
           </a>
         </p>
